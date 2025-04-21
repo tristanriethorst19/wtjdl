@@ -1,0 +1,12 @@
+/* Make the ID column narrower */
+.wp-list-table th:first-child,
+.wp-list-table td:first-child {
+    width: 5%; /* Adjust width as needed */
+    text-align: center;
+}
+
+/* Ensure all other columns are of equal width */
+.wp-list-table th,
+.wp-list-table td {
+    width: auto; /* Let other columns auto-adjust */
+}
