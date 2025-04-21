@@ -1,22 +1,33 @@
 <?php
+// Prevent direct access
 if (!defined('ABSPATH')) {
     exit;
 }
 
+/**
+ * Trimbos_Registration
+ * Registers the custom post type for Trimbos and (optionally) adds a statistics dashboard page.
+ */
 class Trimbos_Registration {
     private $hook_suffix;
 
     /**
-     * Constructor to initialize the class.
+     * Constructor sets up the CPT and optional admin page.
      */
     public function __construct() {
+        // Register the 'trimbos' custom post type
         add_action('init', array($this, 'register_trimbos_cpt'));
+
+        // Optional: add an admin submenu page (currently commented out)
         // add_action('admin_menu', array($this, 'add_admin_pages'));
+
+        // Hook for loading styles/scripts conditionally on the stats page
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
     }
 
     /**
-     * Register the 'Trimbos' custom post type.
+     * Registers the 'trimbos' custom post type.
+     * Used to manage ACF fields, question lists, and optionally track form entries.
      */
     public function register_trimbos_cpt() {
         $labels = array(
@@ -35,29 +46,33 @@ class Trimbos_Registration {
             'not_found'          => __( 'Geen Trimbos gevonden.' ),
             'not_found_in_trash' => __( 'Geen Trimbos gevonden in prullenbak.' )
         );
+
         $args = array(
             'labels'             => $labels,
-            'public'             => true,
+            'public'             => true,                       // Frontend visibility
             'publicly_queryable' => true,
-            'show_ui'            => true,
+            'show_ui'            => true,                       // Show in admin menu
             'show_in_menu'       => true,
             'query_var'          => true,
-            'rewrite'            => array( 'slug' => 'trimbos' ),
+            'rewrite'            => array('slug' => 'trimbos'),
             'capability_type'    => 'post',
             'has_archive'        => true,
             'hierarchical'       => false,
             'menu_position'      => null,
-            'supports'           => array('title', 'editor'), // Adjust as needed
-            'menu_icon'          => 'dashicons-analytics', // Choose an appropriate Dashicon
+            'supports'           => array('title', 'editor'),   // Use editor to configure questions, texts
+            'menu_icon'          => 'dashicons-analytics',
         );
+
         register_post_type('trimbos', $args);
     }
 
     /**
-     * Adds the 'Statistieken' admin page under the 'Trimbos' menu item.
+     * Optional: Adds a 'Statistieken' submenu page (commented out).
      *
+     * This would allow viewing of all submissions and exports from the WP Admin UI.
+     */
+    /*
     public function add_admin_pages() {
-        // Add 'Statistieken' submenu page under 'Trimbos'
         $this->hook_suffix = add_submenu_page(
             'edit.php?post_type=trimbos',
             __('Statistieken', 'textdomain'),
@@ -66,10 +81,11 @@ class Trimbos_Registration {
             'trimbos-statistics',
             array($this, 'display_statistics_page')
         );
-    }*/
+    }
+    */
 
     /**
-     * Enqueue scripts and styles for the 'Statistieken' admin page.
+     * Enqueue admin styles and scripts only on the statistics page (if it were enabled).
      */
     public function enqueue_admin_scripts($hook) {
         if ($hook === $this->hook_suffix) {
@@ -79,6 +95,7 @@ class Trimbos_Registration {
                 array(),
                 '1.0.0'
             );
+
             wp_enqueue_script(
                 'trimbos-admin-script',
                 plugins_url('/admin/js/trimbos-admin.js', dirname(__FILE__)),
@@ -90,9 +107,12 @@ class Trimbos_Registration {
     }
 
     /**
-     * Include the admin page.
-     *
+     * Include the admin template for the 'Statistieken' page.
+     * (Currently not active)
+     */
+    /*
     public function display_statistics_page() {
         include plugin_dir_path(dirname(__FILE__)) . 'admin/trimbos-statistieken.php';
-    }*/
+    }
+    */
 }
