@@ -1,13 +1,17 @@
 <?php
+// Load the site header (WordPress theme function)
 get_header();
 
+// Check if any posts are available in the loop
 if (have_posts()) : 
     while (have_posts()) : the_post();
         global $post;
 ?>
+<!-- Inlined style block to support Elementor or custom frontend variables -->
 <head>
     <style>
         body {
+            /* CSS custom properties for color/typography – likely integrated with Elementor or a design system */
             --e-global-color-primary: #3AB5FF;
             --e-global-color-secondary: #0091E8;
             --e-global-color-text: #FF0000;
@@ -17,6 +21,7 @@ if (have_posts()) :
             --e-global-color-f655ba3: #121212;
             --e-global-color-73a374d: #A7E38F;
             --e-global-color-50a0f15: #FF9A99;
+
             --e-global-typography-primary-font-family: "Arimo";
             --e-global-typography-primary-font-size: 18px;
             --e-global-typography-primary-font-weight: 400;
@@ -39,14 +44,19 @@ if (have_posts()) :
         }
     </style>
 </head>
+
+<!-- Main registration page layout -->
 <div class="registration-page-container">
     <div class="registration-container">
+        <!-- Page title and intro -->
         <div class="registration-title-container">
             <h2>Aanmelden</h2>
             <p>Neem deel aan het symposium <strong><?php the_title(); ?></strong> door hieronder je gegevens in te vullen.</p>
         </div>
+
         <div class="registration-form-container">
             <?php
+            // Only show the form if the post is published (i.e., not a draft or archived)
             if ($post->post_status === 'publish') {
             ?>
             <form action="<?php echo esc_url(admin_url('admin-post.php')); ?>" method="post">
@@ -91,26 +101,30 @@ if (have_posts()) :
                     <option value="none">Geen van bovenstaande</option>
                 </select>
 
-                <!-- Association Membership -->
+                <!-- Optional: Association Membership -->
                 <label for="association">Zit je bij een vereniging? Zo ja, welke?</label>
                 <input type="text" id="association" name="association">
 
-                <!-- Hidden Fields -->
-                <input type="hidden" name="action" value="submit_registration">
+                <!-- Required Hidden Fields -->
+                <input type="hidden" name="action" value="submit_registration"> <!-- Tied to your form handler -->
                 <input type="hidden" name="event_id" value="<?php the_ID(); ?>">
-                <?php wp_nonce_field('submit_registration'); ?>
+                <?php wp_nonce_field('submit_registration'); ?> <!-- Security check -->
 
+                <!-- Submit button -->
                 <input type="submit" value="Aanmelden">
 
-                <!-- Agreement Checkboxes -->
+                <!-- Agreement to privacy policy -->
                 <div class="form-agreements">
                     <input type="checkbox" id="privacy_policy" name="privacy_policy" required>
-                    <label for="privacy_policy">Door je in te schrijven voor dit symposium ga je akkoord met onze <a href="https://waartrekjijdelijn.nl/privacy-verklaring/" target="_blank">privacyverklaring</a>.</label>
+                    <label for="privacy_policy">
+                        Door je in te schrijven voor dit symposium ga je akkoord met onze 
+                        <a href="https://waartrekjijdelijn.nl/privacy-verklaring/" target="_blank">privacyverklaring</a>.
+                    </label>
                 </div>
             </form>
             <?php
-            }
-            else {
+            } else {
+                // If registrations are closed, show message from ACF options
                 $message = get_field('inschrijvingen_gesloten', 'options');
                 echo '<div class="registration-closed-message"><span>' . esc_html($message) . '</span></div>';
             }
@@ -122,5 +136,6 @@ if (have_posts()) :
     endwhile;
 endif;
 
+// Load the site footer
 get_footer();
 ?>
