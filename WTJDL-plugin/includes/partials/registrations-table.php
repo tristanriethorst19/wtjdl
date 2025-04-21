@@ -1,9 +1,18 @@
 <?php
+// Prevent direct access
 if (!defined('ABSPATH')) {
     exit;
 }
 
-// Assume $registrations is passed correctly
+/**
+ * Partial: Admin Registrations Table
+ * Displays a list of all symposium registrations in the admin dashboard.
+ * Uses native WP admin table classes for consistent styling.
+ */
+
+// $registrations is assumed to be passed in from the handler (as an array of DB results)
+
+// Begin the table
 echo '<table class="wp-list-table widefat fixed striped">';
 echo '<thead>';
 echo '<tr>';
@@ -16,12 +25,15 @@ echo '<th>Geslacht</th>';
 echo '<th>Opleiding</th>';
 echo '<th>Vereniging</th>';
 echo '<th>Datum</th>';
+// Optional status column if needed later
 // echo '<th>Status</th>';
 echo '<th>Acties</th>';
 echo '</tr>';
 echo '</thead>';
+
 echo '<tbody>';
 
+// Loop over each registration and display a row
 foreach ($registrations as $registration) {
     echo '<tr>';
     echo '<td>' . esc_html($registration->id) . '</td>';
@@ -33,8 +45,16 @@ foreach ($registrations as $registration) {
     echo '<td>' . esc_html($registration->education_level) . '</td>';
     echo '<td>' . esc_html($registration->association) . '</td>';
     echo '<td>' . esc_html($registration->registration_date) . '</td>';
-   // echo '<td>' . esc_html($registration->status) . '</td>';
-    echo '<td><button class="button action delete-registration" data-id="' . esc_attr($registration->id) . '">Verwijderen</button></td>';
+
+    // Optionally show status column
+    // echo '<td>' . esc_html($registration->status) . '</td>';
+
+    // Action button (connected to AJAX JS)
+    echo '<td>
+            <button class="button action delete-registration" data-id="' . esc_attr($registration->id) . '">
+                Verwijderen
+            </button>
+          </td>';
     echo '</tr>';
 }
 
