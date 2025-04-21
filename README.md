@@ -1,5 +1,5 @@
 
-# WTJDL Plugin (Waar Trek Jij De Lijn)
+# Plugin description
 
 This is a custom WordPress plugin developed to support event registrations and anonymous form submissions. It was designed for real-world use cases, such as organizing symposia and collecting policy assessments (e.g. regarding alcohol and drug use in student associations). The plugin provides secure data collection, an intuitive admin interface, and export functionality, all built on WordPress core principles.
 
@@ -91,4 +91,5 @@ This plugin was developed to serve a dual purpose:
 
 **Tristan Riethorst**  
 [bytris.nl](https://bytris.nl)  
-Plugin developed as part of the WTJDL initiative (Waar Trek Jij De Lijn) in cooperation with Trimbos Institute.
+Plugin developed as part of the **** (****) in cooperation with ***.
+Hidden for privacy purposes.
