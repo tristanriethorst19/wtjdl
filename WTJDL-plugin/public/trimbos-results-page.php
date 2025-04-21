@@ -1,25 +1,72 @@
 <?php
-// Security check: prevent direct access to the file
+// Security check: prevent direct access
 if (!defined('ABSPATH')) {
     exit;
 }
 
-// Use the global $post object to fetch the event title
-$post_title = get_the_title();
+// Get the unique token from the URL query variable
+$unique_token = get_query_var('unique_token');
 
-// Retrieve a success message from the ACF options page (customizable via admin)
-$success_text = get_field('inschrijving_succesvol_tekst', 'option');
+// Validate the token — if it’s missing, we halt with a user-friendly message
+if (!$unique_token) {
+    wp_die('Invalid or missing results token.');
+}
 
-// Load the WordPress theme header
+// Fetch the user's form submission from the custom submissions table
+global $wpdb;
+$submission = $wpdb->get_row($wpdb->prepare(
+    "SELECT * FROM {$wpdb->prefix}trimbos_form_submissions WHERE unique_token = %s",
+    $unique_token
+));
+
+// If the token is not found in the database, stop and show error
+if (!$submission) {
+    wp_die('No results found for the provided token.');
+}
+
+// Now fetch all individual answers tied to this submission
+$answers = $wpdb->get_results($wpdb->prepare(
+    "SELECT * FROM {$wpdb->prefix}trimbos_form_answers WHERE submission_id = %d",
+    $submission->id
+));
+
+// Static ACF post ID where questions and answer content are stored
+$post_id = 1671;
+
+// Load intro and outro WYSIWYG content, filtered for styling
+$introductie_content = apply_filters('the_content', get_field('introductie', $post_id));
+$extra_informatie_content = apply_filters('the_content', get_field('extra_informatie', $post_id));
+
+// Build an array of questions + possible answer outcomes
+$questions = [];
+
+if (have_rows('vragenlijst', $post_id)) {
+    while (have_rows('vragenlijst', $post_id)) : the_row();
+        $unique_identifier = get_sub_field('unique_identifier');
+
+        $questions[$unique_identifier] = [
+            'question' => get_sub_field('hoofdvraag'),
+            'keuze_1' => get_sub_field('keuze_1'),
+            'keuze_1_resultaat_titel' => get_sub_field('keuze_1_resultaat_titel'),
+            'antwoord_1' => apply_filters('the_content', get_sub_field('antwoord_1')),
+
+            'keuze_2' => get_sub_field('keuze_2'),
+            'keuze_2_resultaat_titel' => get_sub_field('keuze_2_resultaat_titel'),
+            'antwoord_2' => apply_filters('the_content', get_sub_field('antwoord_2')),
+        ];
+    endwhile;
+}
+
+// Load WordPress header
 get_header();
 
-// Standard WordPress Loop — ensure there's a post to work with
+// Begin rendering the results page if there’s content
 if (have_posts()) : 
     while (have_posts()) : the_post();
 ?>
 <head>
     <style>
-        /* Inline CSS variables, most likely for Elementor or other visual page builder */
+        /* Global design tokens, likely from Elementor or your design system */
         body {
             --e-global-color-primary: #3AB5FF;
             --e-global-color-secondary: #0091E8;
@@ -57,14 +104,54 @@ if (have_posts()) :
     </style>
 </head>
 
-<!-- Confirmation message layout -->
-<div class="registration-succes-container">
-    <div class="registration-success">
-        <h2>Bevestiging</h2>
-        <p>
-            Je hebt je succesvol aangemeld voor het symposium 
-            <strong><?php echo esc_html($post_title); ?></strong>
-        </p>
+<!-- Main results page structure -->
+<div class="trimbos-results-page">
+    <div class="trimbos-container">
+
+        <!-- Intro section (rich text, from ACF) -->
+        <div class="trimbos-intro">
+            <?php echo $introductie_content; ?>
+        </div>
+
+        <!-- Dynamic accordion list based on user's answers -->
+        <div class="trimbos-accordions">
+            <?php
+            foreach ($answers as $answer) {
+                $question_id = $answer->question_id;
+                $user_answer = $answer->answer_text;
+
+                // Skip if we don’t have matching question metadata
+                if (isset($questions[$question_id])) {
+                    $question_data = $questions[$question_id];
+
+                    // Determine which answer the user chose and show the correct content
+                    if ($user_answer === $question_data['keuze_1']) {
+                        $answer_title = $question_data['keuze_1_resultaat_titel'] ?: $question_data['question'];
+                        $answer_content = $question_data['antwoord_1'];
+                    } else {
+                        $answer_title = $question_data['keuze_2_resultaat_titel'] ?: $question_data['question'];
+                        $answer_content = $question_data['antwoord_2'];
+                    }
+
+                    // Render the accordion component
+                    echo '<div class="accordion">';
+                    echo '<div class="accordion-header" id="accordion-header-' . esc_attr($question_id) . '">';
+                    echo '<span>' . esc_html($answer_title) . '</span>';
+                    echo '<svg class="accordion-arrow" width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.33301 13.3333L15.9997 20L22.6663 13.3333" stroke="#B3B3B3" stroke-width="4.6875" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+                    echo '</div>';
+                    echo '<div class="accordion-content" id="accordion-content-' . esc_attr($question_id) . '">';
+                    echo $answer_content;
+                    echo '</div>';
+                    echo '</div>';
+                }
+            }
+            ?>
+        </div>
+
+        <!-- Outro / further info (from ACF) -->
+        <div class="trimbos-outro">
+            <?php echo $extra_informatie_content; ?>
+        </div>
     </div>
 </div>
 
@@ -72,5 +159,5 @@ if (have_posts()) :
     endwhile;
 endif;
 
-// Load the WordPress footer
+// Load WordPress footer
 get_footer();
